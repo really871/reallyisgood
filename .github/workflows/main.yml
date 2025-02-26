@@ -8,15 +8,39 @@ jobs:
     name: Start Building...
     runs-on: windows-latest
     timeout-minutes: 9999
-    
+
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # استعادة الملفات من الجلسة السابقة
+      - name: Restore Previous Session Files
+        uses: actions/download-artifact@v4
+        with:
+          name: session-files
+          path: C:\workspace
+
       - name: Downloading & Installing Essentials
         run: |
-          Invoke-WebRequest -Uri "https://gitlab.com/chamod12/lm_win-10_github_rdp/-/raw/main/Downloads.bat" -OutFile "Downloads.bat"
-          cmd /c Downloads.bat
+          Invoke-WebRequest -Uri "https://gitlab.com/chamod12/lm_win-10_github_rdp/-/raw/main/Downloads.bat" -OutFile "C:\workspace\Downloads.bat"
+          cmd /c C:\workspace\Downloads.bat
 
       - name: Connect to LiteManager
-        run: cmd /c show.bat
+        run: cmd /c C:\workspace\show.bat
 
       - name: Time Counter
-        run: cmd /c loop.bat
+        run: cmd /c C:\workspace\loop.bat
+
+      # حفظ جميع الملفات تلقائيًا بعد انتهاء الجلسة
+      - name: Save Session Data
+        run: |
+          mkdir -p C:\workspace
+          copy C:\Users\runneradmin\* C:\workspace /Y
+        continue-on-error: true
+
+      # رفع الملفات إلى GitHub تلقائيًا
+      - name: Upload Session Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: session-files
+          path: C:\workspace
